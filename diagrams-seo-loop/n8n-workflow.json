@@ -1,0 +1,182 @@
+{
+  "name": "Diagrams.so — 3-Step Email Sequence",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "diagrams-email-sequence",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook — diagram saved",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "diagrams-email-sequence"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nreturn [{\n  json: {\n    diagram_id:               body.id,\n    diagram_title:            body.title,\n    user_prompt:              body.prompt,\n    role:                     body.role,\n    company_type:             body.company_type,\n    suggestion_1_title:       body.suggestion_1_title,\n    suggestion_1_description: body.suggestion_1_description,\n    suggestion_2_title:       body.suggestion_2_title,\n    suggestion_2_description: body.suggestion_2_description,\n    decision_action:          body.decision_action     || 'educational_email',\n    decision_priority:        body.decision_priority   || 'low',\n    decision_confidence:      body.decision_confidence || 0\n  }\n}];"
+      },
+      "id": "extract-data",
+      "name": "Extract diagram data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/notify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "diagram_id",               "value": "={{ $json.diagram_id }}" },
+            { "name": "diagram_title",            "value": "={{ $json.diagram_title }}" },
+            { "name": "user_prompt",              "value": "={{ $json.user_prompt }}" },
+            { "name": "email_step",               "value": "=1" },
+            { "name": "suggestion_1_title",       "value": "={{ $json.suggestion_1_title }}" },
+            { "name": "suggestion_1_description", "value": "={{ $json.suggestion_1_description }}" },
+            { "name": "suggestion_2_title",       "value": "={{ $json.suggestion_2_title }}" },
+            { "name": "suggestion_2_description", "value": "={{ $json.suggestion_2_description }}" },
+            { "name": "decision_action",          "value": "={{ $json.decision_action }}" },
+            { "name": "user_context",             "value": "={{ JSON.stringify({ role: $json.role, company_type: $json.company_type }) }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "email-1",
+      "name": "Email 1 — Immediate (diagram + upgrades)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "days"
+      },
+      "id": "wait-3days",
+      "name": "Wait 3 days",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "webhookId": "wait-3days"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/notify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "diagram_id",               "value": "={{ $('Extract diagram data').item.json.diagram_id }}" },
+            { "name": "diagram_title",            "value": "={{ $('Extract diagram data').item.json.diagram_title }}" },
+            { "name": "user_prompt",              "value": "={{ $('Extract diagram data').item.json.user_prompt }}" },
+            { "name": "email_step",               "value": "=2" },
+            { "name": "suggestion_1_title",       "value": "={{ $('Extract diagram data').item.json.suggestion_1_title }}" },
+            { "name": "suggestion_1_description", "value": "={{ $('Extract diagram data').item.json.suggestion_1_description }}" },
+            { "name": "suggestion_2_title",       "value": "={{ $('Extract diagram data').item.json.suggestion_2_title }}" },
+            { "name": "suggestion_2_description", "value": "={{ $('Extract diagram data').item.json.suggestion_2_description }}" },
+            { "name": "decision_action",          "value": "={{ $('Extract diagram data').item.json.decision_action }}" },
+            { "name": "user_context",             "value": "={{ JSON.stringify({ role: $('Extract diagram data').item.json.role, company_type: $('Extract diagram data').item.json.company_type }) }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "email-2",
+      "name": "Email 2 — Day 3 (complex version)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "amount": 4,
+        "unit": "days"
+      },
+      "id": "wait-4more-days",
+      "name": "Wait 4 more days (day 7 total)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1340, 300],
+      "webhookId": "wait-4more-days"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/notify",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "diagram_id",               "value": "={{ $('Extract diagram data').item.json.diagram_id }}" },
+            { "name": "diagram_title",            "value": "={{ $('Extract diagram data').item.json.diagram_title }}" },
+            { "name": "user_prompt",              "value": "={{ $('Extract diagram data').item.json.user_prompt }}" },
+            { "name": "email_step",               "value": "=3" },
+            { "name": "suggestion_1_title",       "value": "={{ $('Extract diagram data').item.json.suggestion_1_title }}" },
+            { "name": "suggestion_1_description", "value": "={{ $('Extract diagram data').item.json.suggestion_1_description }}" },
+            { "name": "suggestion_2_title",       "value": "={{ $('Extract diagram data').item.json.suggestion_2_title }}" },
+            { "name": "suggestion_2_description", "value": "={{ $('Extract diagram data').item.json.suggestion_2_description }}" },
+            { "name": "decision_action",          "value": "={{ $('Extract diagram data').item.json.decision_action }}" },
+            { "name": "user_context",             "value": "={{ JSON.stringify({ role: $('Extract diagram data').item.json.role, company_type: $('Extract diagram data').item.json.company_type }) }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "email-3",
+      "name": "Email 3 — Day 7 (upgrade prompt)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1560, 300]
+    }
+  ],
+  "connections": {
+    "Webhook — diagram saved": {
+      "main": [[ { "node": "Extract diagram data", "type": "main", "index": 0 } ]]
+    },
+    "Extract diagram data": {
+      "main": [[ { "node": "Email 1 — Immediate (diagram + upgrades)", "type": "main", "index": 0 } ]]
+    },
+    "Email 1 — Immediate (diagram + upgrades)": {
+      "main": [[ { "node": "Wait 3 days", "type": "main", "index": 0 } ]]
+    },
+    "Wait 3 days": {
+      "main": [[ { "node": "Email 2 — Day 3 (complex version)", "type": "main", "index": 0 } ]]
+    },
+    "Email 2 — Day 3 (complex version)": {
+      "main": [[ { "node": "Wait 4 more days (day 7 total)", "type": "main", "index": 0 } ]]
+    },
+    "Wait 4 more days (day 7 total)": {
+      "main": [[ { "node": "Email 3 — Day 7 (upgrade prompt)", "type": "main", "index": 0 } ]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true
+  },
+  "staticData": null,
+  "tags": []
+}

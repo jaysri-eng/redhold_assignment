@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="diagram-title"    content="HIPAA Healthcare Data Pipeline"/>
+  <meta name="diagram-category" content="data"/>
+  <meta name="diagram-provider" content="aws"/>
+  <title>HIPAA Healthcare Data Pipeline — Architecture Diagram</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #020617; color: #e2e8f0;
+                  font-family: 'JetBrains Mono', monospace; display: flex; flex-direction: column; }
+    header { display: flex; align-items: center; justify-content: space-between;
+              padding: 10px 20px; background: #0f172a;
+              border-bottom: 1px solid #1e293b; flex-shrink: 0; }
+    .logo { font-size: 13px; color: #64748b; }
+    .logo span { color: #22d3ee; }
+    .badge { font-size: 10px; padding: 3px 8px; border-radius: 999px;
+              background: rgba(34,211,238,0.1); color: #22d3ee;
+              border: 1px solid rgba(34,211,238,0.3); }
+    .diagram-container { flex: 1; position: relative; min-height: 560px; }
+    #drawio-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+    #loading { position: absolute; top: 50%; left: 50%;
+                transform: translate(-50%,-50%);
+                color: #64748b; font-size: 12px; text-align: center; }
+    .spinner { width: 22px; height: 22px; border: 2px solid #334155;
+                border-top-color: #22d3ee; border-radius: 50%;
+                animation: spin 0.7s linear infinite; margin: 0 auto 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .actions { position: fixed; bottom: 16px; right: 16px;
+                display: flex; gap: 8px; z-index: 200; }
+    .btn { font-family: inherit; font-size: 11px; padding: 7px 14px;
+            border-radius: 6px; border: 1px solid; cursor: pointer;
+            background: rgba(15,23,42,0.92); backdrop-filter: blur(8px);
+            transition: all 0.2s; }
+    .btn-xml { color: #22d3ee; border-color: rgba(34,211,238,0.4); }
+    .btn-xml:hover { background: rgba(34,211,238,0.15); }
+    footer { padding: 7px 20px; font-size: 10px; color: #334155;
+              background: #020617; border-top: 1px solid #1e293b; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><span>diagrams</span>.so · Intent Capture &amp; Conversion Flywheel</div>
+    <div class="badge">data · aws</div>
+  </header>
+
+  <div class="diagram-container">
+    <div id="loading">
+      <div class="spinner"></div>
+      Loading diagram renderer…
+    </div>
+    <iframe
+      id="drawio-frame"
+      src="https://embed.diagrams.net/?embed=1&proto=json&spin=1&noSaveBtn=1&noExitBtn=1&nav=1"
+      title="Architecture Diagram: HIPAA Healthcare Data Pipeline"
+      allowfullscreen>
+    </iframe>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-xml" onclick="copyXML()">Copy XML</button>
+  </div>
+
+  <footer>Rendered via embed.diagrams.net (draw.io engine) ·
+          diagrams.so Growth Loop · HIPAA Healthcare Data Pipeline</footer>
+
+  <script>
+    const DIAGRAM_XML = `<mxGraphModel background="#020617" gridSize="10" grid="0" page="0" pageWidth="1400" pageHeight="930" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="band_ingress" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0d1f38;strokeColor=#334155;strokeWidth=1;opacity=80;" vertex="1" parent="1"><mxGeometry x="0" y="30" width="1400" height="140" as="geometry" /></mxCell>
+    <mxCell id="label_ingress" value="Ingress &amp; API" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontFamily=JetBrains Mono,monospace;fontSize=11;fontStyle=1;fontColor=#334155;" vertex="1" parent="1"><mxGeometry x="8" y="34" width="160" height="20" as="geometry" /></mxCell>
+    <mxCell id="band_security" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1c0a0f;strokeColor=#881337;strokeWidth=1;opacity=80;" vertex="1" parent="1"><mxGeometry x="0" y="170" width="1400" height="140" as="geometry" /></mxCell>
+    <mxCell id="label_security" value="Security &amp; Auth" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontFamily=JetBrains Mono,monospace;fontSize=11;fontStyle=1;fontColor=#881337;" vertex="1" parent="1"><mxGeometry x="8" y="174" width="160" height="20" as="geometry" /></mxCell>
+    <mxCell id="band_application" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#071a12;strokeColor=#064e3b;strokeWidth=1;opacity=80;" vertex="1" parent="1"><mxGeometry x="0" y="310" width="1400" height="140" as="geometry" /></mxCell>
+    <mxCell id="label_application" value="Application" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontFamily=JetBrains Mono,monospace;fontSize=11;fontStyle=1;fontColor=#064e3b;" vertex="1" parent="1"><mxGeometry x="8" y="314" width="160" height="20" as="geometry" /></mxCell>
+    <mxCell id="band_messaging" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1d0e00;strokeColor=#7c2d12;strokeWidth=1;opacity=80;" vertex="1" parent="1"><mxGeometry x="0" y="450" width="1400" height="140" as="geometry" /></mxCell>
+    <mxCell id="label_messaging" value="Messaging &amp; Events" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontFamily=JetBrains Mono,monospace;fontSize=11;fontStyle=1;fontColor=#7c2d12;" vertex="1" parent="1"><mxGeometry x="8" y="454" width="160" height="20" as="geometry" /></mxCell>
+    <mxCell id="band_data" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#130a32;strokeColor=#4c1d95;strokeWidth=1;opacity=80;" vertex="1" parent="1"><mxGeometry x="0" y="590" width="1400" height="140" as="geometry" /></mxCell>
+    <mxCell id="label_data" value="Data &amp; Storage" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontFamily=JetBrains Mono,monospace;fontSize=11;fontStyle=1;fontColor=#4c1d95;" vertex="1" parent="1"><mxGeometry x="8" y="594" width="160" height="20" as="geometry" /></mxCell>
+    <mxCell id="band_observability" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0d1f38;strokeColor=#334155;strokeWidth=1;opacity=80;" vertex="1" parent="1"><mxGeometry x="0" y="730" width="1400" height="140" as="geometry" /></mxCell>
+    <mxCell id="label_observability" value="Observability" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontFamily=JetBrains Mono,monospace;fontSize=11;fontStyle=1;fontColor=#334155;" vertex="1" parent="1"><mxGeometry x="8" y="734" width="160" height="20" as="geometry" /></mxCell>
+    <mxCell id="API_Gateway" value="API Gateway" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;strokeColor=none;fillColor=#8C4FFF;labelBackgroundColor=none;align=center;html=1;fontSize=11;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.api_gateway;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="1"><mxGeometry x="605" y="70" width="60" height="60" as="geometry" /></mxCell>
+    <mxCell id="AWS_WAF" value="AWS WAF" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;strokeColor=none;fillColor=#DD344C;labelBackgroundColor=none;align=center;html=1;fontSize=11;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.waf;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="1"><mxGeometry x="735" y="70" width="60" height="60" as="geometry" /></mxCell>
+    <mxCell id="Cognito" value="Cognito" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;strokeColor=none;fillColor=#DD344C;labelBackgroundColor=none;align=center;html=1;fontSize=11;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cognito;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="1"><mxGeometry x="605" y="210" width="60" height="60" as="geometry" /></mxCell>
+    <mxCell id="Lambda" value="Lambda" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;strokeColor=none;fillColor=#FF9900;labelBackgroundColor=none;align=center;html=1;fontSize=11;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="1"><mxGeometry x="605" y="350" width="60" height="60" as="geometry" /></mxCell>
+    <mxCell id="Kinesis" value="Kinesis" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;strokeColor=none;fillColor=#E7157B;labelBackgroundColor=none;align=center;html=1;fontSize=11;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.kinesis_data_streams;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="1"><mxGeometry x="670" y="490" width="60" height="60" as="geometry" /></mxCell>
+    <mxCell id="RDS_PostgreSQL" value="RDS PostgreSQL" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;strokeColor=none;fillColor=#7AA116;labelBackgroundColor=none;align=center;html=1;fontSize=11;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="1"><mxGeometry x="670" y="630" width="60" height="60" as="geometry" /></mxCell>
+    <mxCell id="S3" value="S3" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;strokeColor=none;fillColor=#3F8624;labelBackgroundColor=none;align=center;html=1;fontSize=11;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="1"><mxGeometry x="735" y="350" width="60" height="60" as="geometry" /></mxCell>
+    <mxCell id="KMS" value="KMS" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;strokeColor=none;fillColor=#DD344C;labelBackgroundColor=none;align=center;html=1;fontSize=11;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.key_management_service;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="1"><mxGeometry x="735" y="210" width="60" height="60" as="geometry" /></mxCell>
+    <mxCell id="CloudWatch" value="CloudWatch" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;strokeColor=none;fillColor=#E7157B;labelBackgroundColor=none;align=center;html=1;fontSize=11;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudwatch;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="1"><mxGeometry x="670" y="770" width="60" height="60" as="geometry" /></mxCell>
+    <mxCell id="edge_0" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;arcSize=10;strokeColor=#475569;strokeWidth=1.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="AWS_WAF" target="API_Gateway" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="edge_1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;arcSize=10;strokeColor=#475569;strokeWidth=1.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="API_Gateway" target="Cognito" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="edge_2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;arcSize=10;strokeColor=#475569;strokeWidth=1.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="API_Gateway" target="Lambda" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="edge_3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;arcSize=10;strokeColor=#475569;strokeWidth=1.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="Lambda" target="Kinesis" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="edge_4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;arcSize=10;strokeColor=#475569;strokeWidth=1.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="Lambda" target="RDS_PostgreSQL" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="edge_5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;arcSize=10;strokeColor=#475569;strokeWidth=1.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="Lambda" target="S3" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="edge_6" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;arcSize=10;strokeColor=#475569;strokeWidth=1.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="KMS" target="RDS_PostgreSQL" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="edge_7" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;arcSize=10;strokeColor=#475569;strokeWidth=1.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="KMS" target="S3" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="edge_8" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;arcSize=10;strokeColor=#475569;strokeWidth=1.5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="Lambda" target="CloudWatch" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+  </root>
+</mxGraphModel>`;
+    const frame   = document.getElementById('drawio-frame');
+    const loading = document.getElementById('loading');
+    let   loaded  = false;
+
+    function sendLoad() {
+      frame.contentWindow.postMessage(
+        JSON.stringify({ action: 'load', xml: DIAGRAM_XML, format: 'xml' }),
+        '*'
+      );
+    }
+
+    window.addEventListener('message', function(evt) {
+      if (evt.source !== frame.contentWindow) return;
+      try {
+        const msg = JSON.parse(evt.data);
+        if ((msg.event === 'ready' || msg.event === 'init') && !loaded) {
+          loaded = true;
+          loading.style.display = 'none';
+          sendLoad();
+        }
+      } catch(e) {}
+    });
+
+    // Fallback: attempt load after 4s in case ready event was missed
+    setTimeout(function() {
+      if (!loaded) {
+        loaded = true;
+        loading.style.display = 'none';
+        try { sendLoad(); } catch(e) {}
+      }
+    }, 4000);
+
+    function copyXML() {
+      navigator.clipboard.writeText(DIAGRAM_XML)
+        .then(function()  { alert('XML copied to clipboard!\nPaste into any diagrams.net / draw.io diagram.'); })
+        .catch(function() { alert('Copy failed — please copy manually.'); });
+    }
+  </script>
+</body>
+</html>

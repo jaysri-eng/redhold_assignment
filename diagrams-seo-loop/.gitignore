@@ -1,0 +1,36 @@
+# ── Secrets & credentials ─────────────────────────────────────────────────────
+dashboard/.env.local
+dashboard/.env*.local
+.env
+.env.local
+.env*.local
+
+# ── Node / Next.js ────────────────────────────────────────────────────────────
+dashboard/node_modules/
+dashboard/.next/
+dashboard/out/
+dashboard/.turbo/
+dashboard/build/
+dashboard/.vercel/
+
+# ── Python virtualenv ─────────────────────────────────────────────────────────
+pipeline/.venv/
+pipeline/__pycache__/
+pipeline/*.pyc
+pipeline/*.pyo
+**/__pycache__/
+**/*.pyc
+
+# ── Generated data (queue, approved, rejected, events, intent, decisions) ─────
+# These are runtime artefacts — regenerate locally with run.py or the dashboard.
+data/queue/
+data/approved/
+data/rejected/
+data/events/
+data/intent/
+data/decisions/
+data/pending_sequences.json
+
+# ── macOS ──────────────────────────────────────────────────────────────────────
+.DS_Store
+**/.DS_Store
