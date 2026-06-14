@@ -75,6 +75,10 @@ export interface ProcessResult {
   }[];
 }
 
+// Module-level mutex — prevents concurrent processDueSequences calls on the
+// same server process from sending the same email step twice.
+let _processing = false;
+
 // ── Filesystem helpers ────────────────────────────────────────────────────────
 
 function readSequences(): SequenceRecord[] {
@@ -182,85 +186,95 @@ export async function processDueSequences(
 ): Promise<ProcessResult> {
   const result: ProcessResult = { processed: 0, skipped: 0, errors: 0, details: [] };
 
-  let sequences: SequenceRecord[];
-  try {
-    sequences = readSequences();
-  } catch {
+  if (_processing) {
+    result.details.push({ id: "global", step: 0, status: "skipped", message: "already processing" });
     return result;
   }
+  _processing = true;
 
-  if (sequences.length === 0) return result;
-
-  const now     = Date.now();
-  let   changed = false;
-
-  for (const seq of sequences) {
-    if (seq.status === "complete") {
-      result.skipped++;
-      result.details.push({ id: seq.id, step: 0, status: "skipped", message: "already complete" });
-      continue;
-    }
-
-    // Pick the first unsent step that is currently due
-    const dueStep = seq.steps.find(
-      (s) => !s.sent && new Date(s.next_send_at).getTime() <= now,
-    );
-
-    if (!dueStep) {
-      result.skipped++;
-      result.details.push({ id: seq.id, step: 0, status: "skipped", message: "no step due yet" });
-      continue;
-    }
-
+  try {
+    let sequences: SequenceRecord[];
     try {
-      const response = await fetch(`${baseUrl}/api/notify`, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          diagram_id:               seq.diagram_id,
-          diagram_title:            seq.diagram_title,
-          user_prompt:              seq.user_prompt,
-          suggestion_1_title:       seq.suggestion_1_title,
-          suggestion_1_description: seq.suggestion_1_description,
-          suggestion_2_title:       seq.suggestion_2_title,
-          suggestion_2_description: seq.suggestion_2_description,
-          email_step:               dueStep.step,
-          user_context:             seq.user_context,
-          decision_action:          seq.decision_action,
-        }),
-      });
+      sequences = readSequences();
+    } catch {
+      return result;
+    }
 
-      if (response.ok) {
-        dueStep.sent = true;
-        changed      = true;
+    if (sequences.length === 0) return result;
 
-        if (seq.steps.every((s) => s.sent)) {
-          seq.status = "complete";
+    const now     = Date.now();
+    let   changed = false;
+
+    for (const seq of sequences) {
+      if (seq.status === "complete") {
+        result.skipped++;
+        result.details.push({ id: seq.id, step: 0, status: "skipped", message: "already complete" });
+        continue;
+      }
+
+      // Pick the first unsent step that is currently due
+      const dueStep = seq.steps.find(
+        (s) => !s.sent && new Date(s.next_send_at).getTime() <= now,
+      );
+
+      if (!dueStep) {
+        result.skipped++;
+        result.details.push({ id: seq.id, step: 0, status: "skipped", message: "no step due yet" });
+        continue;
+      }
+
+      try {
+        const response = await fetch(`${baseUrl}/api/notify`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            diagram_id:               seq.diagram_id,
+            diagram_title:            seq.diagram_title,
+            user_prompt:              seq.user_prompt,
+            suggestion_1_title:       seq.suggestion_1_title,
+            suggestion_1_description: seq.suggestion_1_description,
+            suggestion_2_title:       seq.suggestion_2_title,
+            suggestion_2_description: seq.suggestion_2_description,
+            email_step:               dueStep.step,
+            user_context:             seq.user_context,
+            decision_action:          seq.decision_action,
+          }),
+        });
+
+        if (response.ok) {
+          dueStep.sent = true;
+          changed      = true;
+
+          if (seq.steps.every((s) => s.sent)) {
+            seq.status = "complete";
+          }
+
+          result.processed++;
+          result.details.push({ id: seq.id, step: dueStep.step, status: "sent" });
+        } else {
+          result.errors++;
+          result.details.push({
+            id:      seq.id,
+            step:    dueStep.step,
+            status:  "error",
+            message: `HTTP ${response.status}`,
+          });
         }
-
-        result.processed++;
-        result.details.push({ id: seq.id, step: dueStep.step, status: "sent" });
-      } else {
+      } catch (err) {
         result.errors++;
         result.details.push({
           id:      seq.id,
           step:    dueStep.step,
           status:  "error",
-          message: `HTTP ${response.status}`,
+          message: err instanceof Error ? err.message : String(err),
         });
       }
-    } catch (err) {
-      result.errors++;
-      result.details.push({
-        id:      seq.id,
-        step:    dueStep.step,
-        status:  "error",
-        message: err instanceof Error ? err.message : String(err),
-      });
     }
+
+    if (changed) writeSequences(sequences);
+
+    return result;
+  } finally {
+    _processing = false;
   }
-
-  if (changed) writeSequences(sequences);
-
-  return result;
 }

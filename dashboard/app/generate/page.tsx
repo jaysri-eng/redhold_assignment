@@ -203,7 +203,6 @@ export default function GeneratePage() {
   const [elapsed, setElapsed]         = useState(0);
   const [saving, setSaving]           = useState(false);
   const [savedId, setSavedId]         = useState<string | null>(null);
-  const [emailSent, setEmailSent]     = useState(false);
   const [suggestions, setSuggestions] = useState<ConversionSuggestion[]>([]);
   const [galleryMetadata, setGalleryMetadata] = useState<GalleryMetadata | null>(null);
   const [socialPosts, setSocialPosts]         = useState<SocialPosts | null>(null);
@@ -220,10 +219,13 @@ export default function GeneratePage() {
     sentSteps?: { id: string; step: number }[];
   } | null>(null);
   const [seqCountdown, setSeqCountdown] = useState<number | null>(null);
-  const seqTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const seqTimerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Ref-based lock so the guard is never stale inside timer closures
+  const seqRunningRef = useRef(false);
 
   const runSequences = useCallback(async () => {
-    if (seqRunning) return;
+    if (seqRunningRef.current) return;
+    seqRunningRef.current = true;
     setSeqRunning(true);
     try {
       const res  = await fetch("/api/run-sequences", { method: "POST" });
@@ -240,9 +242,10 @@ export default function GeneratePage() {
     } catch {
       setSeqResult({ processed: 0, skipped: 0, errors: 1 });
     } finally {
+      seqRunningRef.current = false;
       setSeqRunning(false);
     }
-  }, [seqRunning]);
+  }, []); // stable — uses ref for the guard, no state deps
 
   // Auto-fire sequences every 10 seconds whenever a demo example is active
   // OR a real diagram has just been saved — covers both flows automatically.
@@ -271,8 +274,7 @@ export default function GeneratePage() {
 
     seqTimerRef.current = tick;
     return () => { clearInterval(tick); seqTimerRef.current = null; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeDemoExample, savedId]);
+  }, [activeDemoExample, savedId, runSequences]);
 
   // Clear demo banner when a real generation starts
   useEffect(() => {
@@ -301,37 +303,9 @@ export default function GeneratePage() {
   }, [result, savedId, userId]);
 
   // ── Save to Queue ─────────────────────────────────────────────────────────
-  const sendEvangelistPreview = useCallback(async (
-    itemId: string,
-    savedSuggestions: ConversionSuggestion[],
-  ) => {
-    if (!result?.spec || savedSuggestions.length < 2) return;
-    setEmailSent(false);
-    try {
-      const res = await fetch("/api/notify", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          diagram_id:               itemId,
-          diagram_title:            result.spec.title,
-          user_prompt:              prompt.trim(),
-          suggestion_1_title:       savedSuggestions[0].title,
-          suggestion_1_description: savedSuggestions[0].description,
-          suggestion_2_title:       savedSuggestions[1].title,
-          suggestion_2_description: savedSuggestions[1].description,
-        }),
-      });
-      const data = await res.json() as { ok?: boolean };
-      if (data.ok) setEmailSent(true);
-    } catch (err: unknown) {
-      console.error("[notify] email failed:", err);
-    }
-  }, [result, prompt]);
-
   const saveToQueue = useCallback(async () => {
     if (!result?.drawioXml || !result.spec) return;
     setSaving(true);
-    setEmailSent(false);
     try {
       const res = await fetch("/api/items", {
         method:  "POST",
@@ -361,7 +335,8 @@ export default function GeneratePage() {
         setSavedId(data.id);
         const saved = data.item?.conversion_suggestions ?? suggestions;
         if (saved.length >= 2) setSuggestions(saved);
-        void sendEvangelistPreview(data.id, saved.length >= 2 ? saved : suggestions);
+        // Step 1 is sent by the sequence runner (delay = 0 in addSequence).
+        // No direct /api/notify call here — that would send step 1 twice.
       } else {
         alert(data.error ?? "Save failed");
       }
@@ -370,16 +345,17 @@ export default function GeneratePage() {
     } finally {
       setSaving(false);
     }
-  }, [result, prompt, suggestions, galleryMetadata, socialPosts, sendEvangelistPreview]);
+  }, [result, prompt, suggestions, galleryMetadata, socialPosts]);
 
   // ── Demo mode loader (no Ollama) ─────────────────────────────────────────
-  const loadDemoExample = useCallback((example: DemoExample) => {
+  // Async so we can await the sequence-record write before activating the
+  // timer — prevents the first runSequences() call from winning the race
+  // against addDemoSequence and processing stale sequences out-of-order.
+  const loadDemoExample = useCallback(async (example: DemoExample) => {
     try {
       setDemoModeOpen(false);
-      setActiveDemoExample(example);
       setSuggestions(example.conversion_suggestions);
       setSavedId(null);
-      setEmailSent(false);
       setError(null);
       setGenerating(false);
       setSeqResult(null);
@@ -394,8 +370,10 @@ export default function GeneratePage() {
         conversionSuggestions: example.conversion_suggestions,
       });
 
-      // Write a sequence record so "Send Due Emails" works immediately
-      fetch("/api/demo-sequence", {
+      // Write the sequence record first, THEN activate the timer by setting
+      // activeDemoExample — guarantees the record is on disk before the first
+      // runSequences() call fires.
+      await fetch("/api/demo-sequence", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -409,7 +387,9 @@ export default function GeneratePage() {
           user_context:             example.user_context,
           decision_action:          "educational_email",
         }),
-      }).catch(() => {}); // fire-and-forget, never surface errors
+      }).catch(() => {});
+
+      setActiveDemoExample(example);
     } catch {
       // Silent fallback
     }
@@ -427,7 +407,6 @@ export default function GeneratePage() {
     setError(null);
     setElapsed(0);
     setSavedId(null);
-    setEmailSent(false);
     setSuggestions([]);
     setGalleryMetadata(null);
     setSocialPosts(null);
@@ -930,8 +909,8 @@ export default function GeneratePage() {
                   </div>
                 )}
 
-                {/* Evangelist email confirmation — subtle, background-only */}
-                {emailSent && (
+                {/* Nurture email confirmation — shown once the sequence runner has sent step 1 */}
+                {seqResult && seqResult.processed > 0 && (
                   <div style={{ marginTop: 10, fontSize: "0.68rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)", display: "flex", alignItems: "center", gap: 6 }}>
                     <span>✉</span>
                     <span>User nurture preview sent to your inbox</span>
